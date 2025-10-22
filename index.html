@@ -61,16 +61,19 @@
       font-size: 16px;
       margin-bottom: 10px;
     }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Lista de Tarefas</h1>
+    <div id="error" class="error"></div>
     <p>Gerencie suas tarefas:</p>
 
-    <div id="itemList">
-      <!-- Itens serão adicionados aqui -->
-    </div>
+    <div id="itemList"></div>
 
     <input type="text" id="newItem" placeholder="Nova tarefa">
     <button onclick="adicionarItem()">Adicionar Tarefa</button>
@@ -82,6 +85,14 @@
 
   <script>
     const tg = window.Telegram.WebApp;
+
+    // Verifica se está rodando dentro do Telegram
+    if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
+      document.getElementById('error').textContent = "Este miniapp só funciona dentro do Telegram!";
+      document.querySelector('button').disabled = true;
+      throw new Error("Não está rodando dentro do Telegram!");
+    }
+
     tg.expand();
 
     let itens = [];
@@ -128,7 +139,7 @@
         userId: userId,
         itens: itens
       };
-      console.log("Enviando dados:", data); // Debug
+      console.log("Enviando dados:", data);
       tg.sendData(JSON.stringify(data));
       document.getElementById('feedback').textContent = 'Lista enviada para o bot!';
       setTimeout(() => tg.close(), 1500);
