@@ -1,149 +1,49 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>MiniApp Lista de Tarefas</title>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-      background: #f7f7f7;
-    }
-    .container {
-      max-width: 500px;
-      margin: 0 auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    button {
-      background: #0088cc;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      margin: 10px;
-      width: 80%;
-    }
-    #itemList {
-      text-align: left;
-      margin: 20px 0;
-    }
-    .item {
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .item button {
-      width: auto;
-      background: #ff4444;
-      padding: 5px 10px;
-      font-size: 14px;
-    }
-    #feedback {
-      margin: 20px 0;
-      font-weight: bold;
-      color: #0088cc;
-    }
-    #newItem {
-      padding: 10px;
-      width: 80%;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      font-size: 16px;
-      margin-bottom: 10px;
-    }
-    .error {
-      color: red;
-      font-weight: bold;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Lista de Tarefas</h1>
-    <div id="error" class="error"></div>
-    <p>Gerencie suas tarefas:</p>
+import json
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+import logging
 
-    <div id="itemList"></div>
+# Configura o logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
-    <input type="text" id="newItem" placeholder="Nova tarefa">
-    <button onclick="adicionarItem()">Adicionar Tarefa</button>
+TOKEN = "SEU_TOKEN_AQUI"  # Substitua pelo token do seu bot
 
-    <div id="feedback"></div>
+def start(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text('Olá! Abra o miniapp pelo menu do bot para gerenciar sua lista de tarefas.')
 
-    <button onclick="enviarTudo()">Enviar Lista para o Bot</button>
-  </div>
+def handle_message(update: Update, context: CallbackContext) -> None:
+    # Verifica se a mensagem contém web_app_data
+    if hasattr(update.message, 'web_app_data') and update.message.web_app_data:
+        try:
+            data = json.loads(update.message.web_app_data.data)
+            logger.info(f"Dados recebidos: {data}")  # Debug
+            user_id = data.get('userId', 'Desconhecido')
+            itens = data.get('itens', [])
 
-  <script>
-    const tg = window.Telegram.WebApp;
+            if itens:
+                mensagem = f"Sua lista de tarefas:\n\n" + "\n".join([f"• {item}" for item in itens])
+                update.message.reply_text(mensagem)
+            else:
+                update.message.reply_text("Sua lista está vazia!")
+        except Exception as e:
+            logger.error(f"Erro: {e}")
+            update.message.reply_text("Erro ao processar os dados.")
 
-    // Verifica se está rodando dentro do Telegram
-    if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
-      document.getElementById('error').textContent = "Este miniapp só funciona dentro do Telegram!";
-      document.querySelector('button').disabled = true;
-      throw new Error("Não está rodando dentro do Telegram!");
-    }
+def main() -> None:
+    updater = Updater(TOKEN, use_context=True)
+    dispatcher = updater.dispatcher
 
-    tg.expand();
+    dispatcher.add_handler(CommandHandler("start", start))
+    # Captura TODAS as mensagens e verifica se contém web_app_data
+    dispatcher.add_handler(MessageHandler(Filters.all, handle_message))
 
-    let itens = [];
+    updater.start_polling()
+    logger.info("Bot rodando com polling...")
+    updater.idle()
 
-    // Atualiza a lista na tela
-    function atualizarLista() {
-      const lista = document.getElementById('itemList');
-      lista.innerHTML = '';
-      itens.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'item';
-        div.innerHTML = `
-          <span>${item}</span>
-          <button onclick="removerItem('${item}')">Remover</button>
-        `;
-        lista.appendChild(div);
-      });
-    }
-
-    // Adiciona um item
-    function adicionarItem() {
-      const novoItem = document.getElementById('newItem').value.trim();
-      if (novoItem) {
-        itens.push(novoItem);
-        document.getElementById('newItem').value = '';
-        atualizarLista();
-        document.getElementById('feedback').textContent = 'Tarefa adicionada!';
-        setTimeout(() => document.getElementById('feedback').textContent = '', 2000);
-      }
-    }
-
-    // Remove um item
-    function removerItem(item) {
-      itens = itens.filter(i => i !== item);
-      atualizarLista();
-      document.getElementById('feedback').textContent = 'Tarefa removida!';
-      setTimeout(() => document.getElementById('feedback').textContent = '', 2000);
-    }
-
-    // Envia a lista para o bot
-    function enviarTudo() {
-      const userId = tg.initDataUnsafe.user.id;
-      const data = {
-        userId: userId,
-        itens: itens
-      };
-      console.log("Enviando dados:", data);
-      tg.sendData(JSON.stringify(data));
-      document.getElementById('feedback').textContent = 'Lista enviada para o bot!';
-      setTimeout(() => tg.close(), 1500);
-    }
-  </script>
-</body>
-</html>
+if __name__ == '__main__':
+    main()
