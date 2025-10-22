@@ -117,7 +117,17 @@
 
             // *** A CHAMADA CRÍTICA: Envia os dados e fecha a Web App ***
             // O bot irá receber esta string de dados como uma mensagem do tipo 'web_app_data'
-            tg.sendData(dadosJSON); 
+            try {
+    tg.sendData(dadosJSON); 
+} catch (error) {
+    // Se não fechar, o erro está aqui
+    console.error("ERRO na chamada:", error); 
+    // Mostra o erro diretamente para o usuário na tela do Telegram
+    tg.showAlert('Erro Crítico no Envio! Detalhes: ' + error.message);
+    
+    // Opcional: Para debugging, envie os logs para o seu back-end (via fetch/ajax)
+    // fetch('https://seu-servidor.com/log_erro', { method: 'POST', body: error.message });
+}
             
             // Nota: Após sendData(), a Web App é fechada automaticamente pelo Telegram.
             // Se você quiser fazer algo antes de fechar, precisará de uma lógica mais complexa de confirmação.
