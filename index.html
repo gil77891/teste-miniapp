@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Meu MiniApp</title>
+  <title>Meu MiniApp Interativo</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -12,49 +12,127 @@
       padding: 20px;
       background: #f7f7f7;
     }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
     button {
       background: #0088cc;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 12px 20px;
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
-      margin-top: 20px;
-    }
-    #message {
-      padding: 10px;
+      margin: 10px;
       width: 80%;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      font-size: 16px;
+    }
+    #itemList {
+      text-align: left;
+      margin: 20px 0;
+    }
+    .item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .item button {
+      width: auto;
+      background: #ff4444;
+      padding: 5px 10px;
+      font-size: 14px;
+    }
+    #feedback {
+      margin: 20px 0;
+      font-weight: bold;
+      color: #0088cc;
     }
   </style>
 </head>
 <body>
-  <h1>Bem-vindo ao MiniApp!</h1>
-  <p>Digite uma mensagem e clique no botão:</p>
-  <input type="text" id="message" placeholder="Sua mensagem aqui">
-  <button onclick="enviarMensagem()">Enviar para o Bot</button>
+  <div class="container">
+    <h1>Lista de Tarefas</h1>
+    <p>Clique nos botões para interagir:</p>
+
+    <div id="itemList">
+      <div class="item">
+        <span>Comprar pão</span>
+        <button onclick="removerItem('Comprar pão')">Remover</button>
+      </div>
+      <div class="item">
+        <span>Ligar para João</span>
+        <button onclick="removerItem('Ligar para João')">Remover</button>
+      </div>
+      <div class="item">
+        <span>Estudar Python</span>
+        <button onclick="removerItem('Estudar Python')">Remover</button>
+      </div>
+    </div>
+
+    <input type="text" id="newItem" placeholder="Nova tarefa">
+    <button onclick="adicionarItem()">Adicionar Tarefa</button>
+
+    <div id="feedback"></div>
+
+    <button onclick="enviarTudo()">Enviar Lista para o Bot</button>
+  </div>
 
   <script>
-    // Inicializa o WebApp
     const tg = window.Telegram.WebApp;
-    tg.expand(); // Expande o miniapp para tela cheia
+    tg.expand();
 
-    // Função para enviar mensagem
-    function enviarMensagem() {
-      const mensagem = document.getElementById('message').value;
+    let itens = [
+      "Comprar pão",
+      "Ligar para João",
+      "Estudar Python"
+    ];
+
+    function atualizarLista() {
+      const lista = document.getElementById('itemList');
+      lista.innerHTML = '';
+      itens.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerHTML = `
+          <span>${item}</span>
+          <button onclick="removerItem('${item}')">Remover</button>
+        `;
+        lista.appendChild(div);
+      });
+    }
+
+    function adicionarItem() {
+      const novoItem = document.getElementById('newItem').value.trim();
+      if (novoItem) {
+        itens.push(novoItem);
+        document.getElementById('newItem').value = '';
+        atualizarLista();
+        document.getElementById('feedback').textContent = 'Tarefa adicionada!';
+        setTimeout(() => document.getElementById('feedback').textContent = '', 2000);
+      }
+    }
+
+    function removerItem(item) {
+      itens = itens.filter(i => i !== item);
+      atualizarLista();
+      document.getElementById('feedback').textContent = 'Tarefa removida!';
+      setTimeout(() => document.getElementById('feedback').textContent = '', 2000);
+    }
+
+    function enviarTudo() {
       const userId = tg.initDataUnsafe.user.id;
-
-      // Envia dados para o bot (opcional, se quiser processar no backend)
       tg.sendData(JSON.stringify({
-        mensagem: mensagem,
-        userId: userId
+        userId: userId,
+        itens: itens
       }));
-
-      // Fecha o miniapp
-      tg.close();
+      document.getElementById('feedback').textContent = 'Lista enviada para o bot!';
+      setTimeout(() => tg.close(), 1500);
     }
   </script>
 </body>
