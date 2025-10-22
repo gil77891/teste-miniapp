@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Meu MiniApp Interativo</title>
+  <title>MiniApp Lista de Tarefas</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
       background: #f7f7f7;
@@ -53,26 +53,23 @@
       font-weight: bold;
       color: #0088cc;
     }
+    #newItem {
+      padding: 10px;
+      width: 80%;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Lista de Tarefas</h1>
-    <p>Clique nos botões para interagir:</p>
+    <p>Gerencie suas tarefas:</p>
 
     <div id="itemList">
-      <div class="item">
-        <span>Comprar pão</span>
-        <button onclick="removerItem('Comprar pão')">Remover</button>
-      </div>
-      <div class="item">
-        <span>Ligar para João</span>
-        <button onclick="removerItem('Ligar para João')">Remover</button>
-      </div>
-      <div class="item">
-        <span>Estudar Python</span>
-        <button onclick="removerItem('Estudar Python')">Remover</button>
-      </div>
+      <!-- Itens serão adicionados aqui -->
     </div>
 
     <input type="text" id="newItem" placeholder="Nova tarefa">
@@ -87,12 +84,9 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
-    let itens = [
-      "Comprar pão",
-      "Ligar para João",
-      "Estudar Python"
-    ];
+    let itens = [];
 
+    // Atualiza a lista na tela
     function atualizarLista() {
       const lista = document.getElementById('itemList');
       lista.innerHTML = '';
@@ -107,6 +101,7 @@
       });
     }
 
+    // Adiciona um item
     function adicionarItem() {
       const novoItem = document.getElementById('newItem').value.trim();
       if (novoItem) {
@@ -118,6 +113,7 @@
       }
     }
 
+    // Remove um item
     function removerItem(item) {
       itens = itens.filter(i => i !== item);
       atualizarLista();
@@ -125,12 +121,15 @@
       setTimeout(() => document.getElementById('feedback').textContent = '', 2000);
     }
 
+    // Envia a lista para o bot
     function enviarTudo() {
       const userId = tg.initDataUnsafe.user.id;
-      tg.sendData(JSON.stringify({
+      const data = {
         userId: userId,
         itens: itens
-      }));
+      };
+      console.log("Enviando dados:", data); // Debug
+      tg.sendData(JSON.stringify(data));
       document.getElementById('feedback').textContent = 'Lista enviada para o bot!';
       setTimeout(() => tg.close(), 1500);
     }
