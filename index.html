@@ -70,10 +70,18 @@
 
     <script>
         // O objeto principal da API Web App do Telegram
-        const tg = window.Telegram.WebApp;
+        // No seu index.html, dentro da tag <script>
+const tg = window.Telegram.WebApp;
 
-        // Função para ser chamada quando a Web App estiver pronta
-        tg.ready();
+// 1. Verificação de Acesso: O objeto tg existe?
+if (typeof tg === 'undefined') {
+    alert("ERRO FATAL: Objeto Telegram.WebApp não encontrado. Verifique a tag <script> da biblioteca.");
+} else {
+    // 2. Confirmação de Prontidão
+    tg.ready();
+    tg.showAlert("API do Telegram carregada com sucesso!");
+    // (A Web App só deve abrir se a API carregar. Se isso falhar, o problema é na URL base ou no HTTPS)
+}
 
         // ----------------------------------------------------
         // 1. Configurar o Botão Principal (Melhor Prática)
